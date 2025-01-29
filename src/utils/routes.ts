@@ -106,8 +106,7 @@ export async function getGICardNumber(
 		const index = apiData.avatarInfoList.findIndex(
 			(e) => e.avatarId === id,
 		);
-		const ret = index === -1 ? null : index;
-		return ret;
+		return index === -1 ? null : index;
 	}
 	return getCardNumber(avIdToIndex, GICharacters, character);
 }
@@ -132,14 +131,30 @@ export async function getHSRCardNumber(
 		const index = apiData.detailInfo.avatarDetailList.findIndex(
 			(e) => e.avatarId === id,
 		);
-		const ret = index === -1 ? null : index;
-		return ret;
+		return index === -1 ? null : index;
 	}
 	return getCardNumber(avIdToIndex, HSRCharacters, character);
 }
 
-export type ZZZUidAPIData = {
+type ZZZAvatarListItem = {
+	[key: string]: unknown;
+	Id: number;
+}
 
+type ZZZEquipmentWeaponListItem = {
+	[key: string]: unknown;
+	Id: number;
+	Uid: number;
+}
+
+export type ZZZUidAPIData = {
+	PlayerInfo: {
+		ShowcaseDetail: {
+			AvatarList: readonly ZZZAvatarListItem[];
+			EquipmentList?: readonly ZZZEquipmentWeaponListItem[];
+			WeaponList?: readonly ZZZEquipmentWeaponListItem[];
+		}
+	}
 }
 
 export async function getZZZCardNumber(
@@ -150,9 +165,10 @@ export async function getZZZCardNumber(
 	const ZZZCharacters = await getZZZCharacters(locale);
 
 	function avIdToIndex(id: number) {
-		const index: number = 0 // get index
-		const ret = index === -1 ? null : index;
-		return ret;
+		const index: number = apiData.PlayerInfo.ShowcaseDetail.AvatarList.findIndex(
+			e => e.Id === id
+		)
+		return index === -1 ? null : index;
 	}
 	return getCardNumber(avIdToIndex, ZZZCharacters, character);
 }
@@ -251,9 +267,10 @@ export async function setupZZZUidRoute(
 	const cardNumber = await getZZZCardNumber(apiData, locale, character);
 
 	const params = generateUidParams(req, locale, cardNumber);
+
 	const hashes = await getUidHash(
 		params.Key,
-		apiData // get the avatar detail
+		apiData.PlayerInfo.ShowcaseDetail.AvatarList[cardNumber],
 	)
 	return { enkaUrl, locale, cardNumber, params, hashes, result };
 }
