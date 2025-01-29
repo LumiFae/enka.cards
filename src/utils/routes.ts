@@ -2,11 +2,11 @@ import { Request, Response } from 'express';
 import { PutObjectCommandInput } from '@aws-sdk/client-s3';
 import { getImage, getUidImage } from './puppeteer';
 import { client } from '../s3';
-import { Characters, getGICharacters, getHSRCharacters } from './enka-api';
+import { Characters, getGICharacters, getHSRCharacters, getZZZCharacters } from './enka-api';
 import axios from 'axios';
 import { generateUidParams } from './params';
 import { getUidHash } from './hashes';
-import { randomChars, RouteError, RouteRedirect } from './misc';
+import { hoyo_type, HoyoType, randomChars, RouteError, RouteRedirect } from './misc';
 
 export async function setupRoute(req: Request, res: Response) {
 	res.setHeader('Access-Control-Allow-Origin', '*');
@@ -32,7 +32,7 @@ export async function sendImage(
 	apihash: string,
 	image: boolean,
 	result: string,
-	hoyo_type: 0 | 1,
+	hoyo_type: HoyoType,
 	uid = false,
 	cardNumber?: number,
 ) {
@@ -138,23 +138,42 @@ export async function getHSRCardNumber(
 	return getCardNumber(avIdToIndex, HSRCharacters, character);
 }
 
+export type ZZZUidAPIData = {
+
+}
+
+export async function getZZZCardNumber(
+	apiData: ZZZUidAPIData,
+	locale: string,
+	character: string,
+) {
+	const ZZZCharacters = await getZZZCharacters(locale);
+
+	function avIdToIndex(id: number) {
+		const index: number = 0 // get index
+		const ret = index === -1 ? null : index;
+		return ret;
+	}
+	return getCardNumber(avIdToIndex, ZZZCharacters, character);
+}
+
 async function uidRoute(
 	req: Request,
 	res: Response,
 	image: boolean,
-	hoyo_type: 0 | 1,
+	hoyoType: HoyoType,
 ) {
 	res.setHeader('Access-Control-Allow-Origin', '*');
 	const url = new URL(req.url, `${req.protocol}://${req.headers.host}`);
 	const locale = url.searchParams.get('lang') || 'en';
 	const character = req.params.character;
-	const enkaUrl = `https://enka.network/${hoyo_type === 0 ? 'u' : 'hsr'}/${req.params.uid}`;
+	const enkaUrl = `https://enka.network/${hoyoType === hoyo_type.Genshin ? 'u' : hoyoType === hoyo_type.Honkers ? 'hsr' : 'zzz'}/${req.params.uid}`;
 
 	if (!image && !req.headers['user-agent']?.includes('Discordbot')) {
 		return new RouteRedirect(enkaUrl);
 	}
 
-	const apiUrl = hoyo_type === 0 ? 'uid' : 'hsr/uid';
+	const apiUrl = hoyoType === hoyo_type.Genshin ? 'uid' : hoyoType === hoyo_type.Honkers ? 'hsr/uid' : 'zzz/uid';
 
 	const apiCall = await axios
 		.get(`https://enka.network/api/${apiUrl}/${req.params.uid}`)
@@ -178,7 +197,7 @@ export async function setupGIUidRoute(
 	res: Response,
 	image: boolean
 ): Promise<SetupRouteReturn> {
-	const route = await uidRoute(req, res, image, 0);
+	const route = await uidRoute(req, res, image, hoyo_type.Genshin);
 
 	if (route instanceof RouteError || route instanceof RouteRedirect) return route;
 	const { locale, character, enkaUrl, apiCall, result } = route;
@@ -200,7 +219,7 @@ export async function setupHSRUidRoute(
 	res: Response,
 	image: boolean
 ): Promise<SetupRouteReturn> {
-	const route = await uidRoute(req, res, image, 1);
+	const route = await uidRoute(req, res, image, hoyo_type.Honkers);
 
 	if (route instanceof RouteError || route instanceof RouteRedirect) return route;
 	const { locale, character, enkaUrl, apiCall, result } = route;
@@ -214,5 +233,27 @@ export async function setupHSRUidRoute(
 		params.Key,
 		apiData.detailInfo.avatarDetailList[cardNumber],
 	);
+	return { enkaUrl, locale, cardNumber, params, hashes, result };
+}
+
+export async function setupZZZUidRoute(
+	req: Request,
+	res: Response,
+	image: boolean
+): Promise<SetupRouteReturn> {
+	const route = await uidRoute(req, res, image, hoyo_type.Zenless);
+
+	if(route instanceof RouteError || route instanceof RouteRedirect) return route;
+	const { locale, character, enkaUrl, apiCall, result } = route;
+
+	const apiData: ZZZUidAPIData = apiCall.data;
+
+	const cardNumber = await getZZZCardNumber(apiData, locale, character);
+
+	const params = generateUidParams(req, locale, cardNumber);
+	const hashes = await getUidHash(
+		params.Key,
+		apiData // get the avatar detail
+	)
 	return { enkaUrl, locale, cardNumber, params, hashes, result };
 }
