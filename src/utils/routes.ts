@@ -106,7 +106,8 @@ export async function getGICardNumber(
 		const index = apiData.avatarInfoList.findIndex(
 			(e) => e.avatarId === id,
 		);
-		return index === -1 ? null : index;
+		const ret = index === -1 ? null : index;
+		return ret;
 	}
 	return getCardNumber(avIdToIndex, GICharacters, character);
 }
@@ -131,7 +132,8 @@ export async function getHSRCardNumber(
 		const index = apiData.detailInfo.avatarDetailList.findIndex(
 			(e) => e.avatarId === id,
 		);
-		return index === -1 ? null : index;
+		const ret = index === -1 ? null : index;
+		return ret;
 	}
 	return getCardNumber(avIdToIndex, HSRCharacters, character);
 }
