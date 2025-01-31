@@ -25,7 +25,7 @@ async function routeHandler(res: Response, image: boolean, route: SetupRouteRetu
 			true,
 			cardNumber,
 		).catch(() => null);
-		if (!img) return res.status(500).send('Error');
+		if (!img) return res.status(500).send('Error sending image to client');
 		if (!(img instanceof Buffer)) return img;
 		res.setHeader('Content-Type', 'image/png');
 		return res.end(img, 'binary');
@@ -45,7 +45,7 @@ async function routeHandler(res: Response, image: boolean, route: SetupRouteRetu
 				true,
 				cardNumber,
 			).catch(() => null);
-			if (!img) return res.status(500).send('Error');
+			if (!img) return res.status(500).send('Error sending cached image to client');
 			if (!(img instanceof Buffer)) return img;
 			res.setHeader('Content-Type', 'image/png');
 			return res.end(img, 'binary');
