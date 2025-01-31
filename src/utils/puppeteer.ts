@@ -3,9 +3,9 @@ import { getBrowser } from '../puppeteer';
 import { Page } from 'puppeteer';
 import { Sharp } from 'sharp';
 import { cardify } from './sharp';
-import { generateGlobalToggles, hoyo_type, HoyoType, sleep } from './misc';
+import { generateGlobalToggles, sleep } from './misc';
 
-export async function setupPage(locale: string, url: string, res: Response, hoyo_type: HoyoType) {
+export async function setupPage(locale: string, url: string, res: Response, hoyo_type: 0 | 1) {
 	const page = await (await getBrowser()).newPage();
 	page.on('pageerror,', (err) => console.log('PAGE ERROR:', err));
 	page.on('error', (err) => console.log('ERROR:', err));
@@ -60,7 +60,7 @@ async function generateCard(page: Page, res: Response) {
 	return img;
 }
 
-export async function getImage(locale: string, enkaurl: string, res: Response, hoyo_type: HoyoType) {
+export async function getImage(locale: string, enkaurl: string, res: Response, hoyo_type: 0 | 1) {
 	const page = await setupPage(locale, enkaurl, res, hoyo_type);
 	if (!(page instanceof Page)) return page;
 	const img = await generateCard(page, res);
@@ -73,8 +73,8 @@ export async function getUidImage(
 	res: Response,
 	cardNumber: number,
 ) {
-	const hoyoType = enkaurl.includes('/u/') ? hoyo_type.Genshin : enkaurl.includes('/hsr/') ? hoyo_type.Honkers : hoyo_type.Zenless;
-	const page = await setupPage(locale, enkaurl, res, hoyoType);
+	const hoyo_type = enkaurl.includes('/u/') ? 0 : 1;
+	const page = await setupPage(locale, enkaurl, res, hoyo_type);
 	if (!(page instanceof Page)) return page;
 	await page
 		.waitForSelector('content>div.CharacterList>div.avatar.live')

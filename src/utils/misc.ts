@@ -1,13 +1,5 @@
 import { Response } from 'express';
 
-export const hoyo_type = {
-	Genshin: 0,
-	Honkers: 1,
-	Zenless: 2
-} as const;
-
-export type HoyoType = typeof hoyo_type[keyof typeof hoyo_type];
-
 export function randomChars() {
 	let result = '';
 	const characters =
@@ -83,10 +75,10 @@ const defaultGlobalToggles = {
 	"adaptiveColor":false,
 	"profileCategory":0,
 	"hideNames":false,
-	"hoyo_type":0 as HoyoType,
+	"hoyo_type":0 as 0 | 1,
 }
 
-export function generateGlobalToggles(hoyo_type: HoyoType, substats: boolean = false, subsBreakdown: boolean = true) {
+export function generateGlobalToggles(hoyo_type: 0 | 1, substats: boolean = false, subsBreakdown: boolean = true) {
 	const globalToggles = {
 		...defaultGlobalToggles,
 		"substats":substats,

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { sendImage, setupGIUidRoute, setupHSRUidRoute, SetupRouteReturn, setupZZZUidRoute } from './routes';
+import { sendImage, setupGIUidRoute, setupHSRUidRoute, SetupRouteReturn } from './routes';
 import { isReturnable, RouteReturner } from './misc';
 import { imageIfSameHash, sameHash } from './hashes';
 import { client } from '../s3';
@@ -80,10 +80,5 @@ export async function HSR(req: Request, res: Response, image: boolean) {
 
 export async function GI(req: Request, res: Response, image: boolean) {
 	const route = await setupGIUidRoute(req, res, image);
-	return await routeHandler(res, image, route);
-}
-
-export async function ZZZ(req: Request, res: Response, image: boolean) {
-	const route = await setupZZZUidRoute(req, res, image);
 	return await routeHandler(res, image, route);
 }
