@@ -11,7 +11,7 @@ type GICharactersAPI = Record<
 export type Characters = {
 	name: string;
 	characterId: string;
-	nameHash: number;
+	nameHash: number | string;
 };
 
 export async function getGICharacters(locale: string) {
@@ -73,6 +73,37 @@ export async function getHSRCharacters(locale: string) {
 			name,
 			characterId: key,
 			nameHash: value.AvatarName.Hash,
+		});
+	}
+	return returndata;
+}
+
+type ZZZCharactersAPI = Record<string, {
+	[k: string]: unknown;
+	Name: string;
+}>
+
+async function getZZZLocales() {
+	const response = await axios.get(
+		'https://raw.githubusercontent.com/EnkaNetwork/API-docs/refs/heads/master/store/zzz/locs.json',
+	);
+	return response.data;
+}
+
+export async function getZZZCharacters(locale: string) {
+	const locales = await getZZZLocales();
+	const response = await axios.get(
+		'https://raw.githubusercontent.com/EnkaNetwork/API-docs/refs/heads/master/store/zzz/avatars.json'
+	);
+	const data: ZZZCharactersAPI = response.data;
+	const returndata: Characters[] = [] = [];
+	const localedata = locales[locale] || locales['en'];
+	for (const [key, value] of Object.entries(data)) {
+		const name = localedata[value.Name];
+		returndata.push({
+			name,
+			characterId: key,
+			nameHash: value.Name
 		});
 	}
 	return returndata;

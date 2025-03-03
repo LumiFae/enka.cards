@@ -1,7 +1,7 @@
 import { client } from '../s3';
 import axios from 'axios';
 import crypto from 'crypto';
-import { RouteRespond } from './misc';
+import { HoyoType, RouteRespond } from './misc';
 
 export async function getHash(
 	key: string,
@@ -9,11 +9,11 @@ export async function getHash(
 	hoyo: string,
 	avatar: string,
 	build: string,
-): Promise<{ hashes: [string, string], hoyo_type: 0 | 1 }> {
+): Promise<{ hashes: [string, string], hoyo_type: HoyoType }> {
 	const settled = await Promise.allSettled([
 		client.get(`${key.replace('.png', '')}.hash`),
 		axios
-			.get<Record<string, { id: number, avatarId: string, hoyo_type: 0 | 1 }[]>>(
+			.get<Record<string, { id: number, avatarId: string, hoyo_type: HoyoType }[]>>(
 				`https://enka.network/api/profile/${username}/hoyos/${hoyo}/builds/`,
 			)
 			.catch(() => null),
