@@ -6,7 +6,7 @@ async function init() {
 	const puppeteerBrowser = await launch({
 		args: [
 			'--no-sandbox',
-			'--font-render-hinting=none',
+			'--font-render-hinting=medium',
 			'--force-color-profile=srgb',
 			'--disable-web-security',
 			'--disable-setuid-sandbox',
