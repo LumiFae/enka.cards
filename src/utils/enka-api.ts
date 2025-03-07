@@ -96,7 +96,7 @@ export async function getZZZCharacters(locale: string) {
 		'https://raw.githubusercontent.com/EnkaNetwork/API-docs/refs/heads/master/store/zzz/avatars.json'
 	);
 	const data: ZZZCharactersAPI = response.data;
-	const returndata: Characters[] = [] = [];
+	const returndata: Characters[] = [];
 	const localedata = locales[locale] || locales['en'];
 	for (const [key, value] of Object.entries(data)) {
 		const name = localedata[value.Name];

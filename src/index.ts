@@ -7,6 +7,8 @@ import userimage from './routes/userimage';
 import { init } from './s3';
 import hsruidimage from './routes/hsruidimage';
 import hsruid from './routes/hsruid';
+import zzzuid from './routes/zzzuid';
+import zzzuidimage from './routes/zzzuidimage';
 
 dotenv.config();
 
@@ -21,6 +23,8 @@ app.use('/', uidimage);
 app.use('/', uid);
 app.use('/', userimage);
 app.use('/', user);
+app.use('/', zzzuid);
+app.use('/', zzzuidimage);
 
 app.get('/', (_: Request, res: Response) => {
 	return res.redirect('https://enka.network');
