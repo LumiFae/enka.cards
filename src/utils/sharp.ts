@@ -1,7 +1,7 @@
 import sharp, { Sharp } from 'sharp';
 
-export async function cardify(img: Sharp | Buffer) {
-	if (img instanceof Buffer) img = sharp(img);
+export async function cardify(img: Sharp | Uint8Array) {
+	if (img instanceof Uint8Array) img = sharp(img);
 	const imgmeta = await img.metadata();
 	img = await img
 		.composite([

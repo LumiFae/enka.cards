@@ -51,7 +51,7 @@ async function generateCard(page: Page, res: Response) {
 	await page.waitForFunction('!document.querySelector("div.Card .loader")').catch(() => null);
 	const html = await page.waitForSelector('div.Card').catch(() => null);
 	if (!html) return res.status(500).send('No card found');
-	let img: Sharp | Buffer | null = await html
+	let img: Sharp | Uint8Array | null = await html
 		.screenshot({ type: 'png' })
 		.catch(() => null);
 	if (!img) return res.status(500).send('No image found');
