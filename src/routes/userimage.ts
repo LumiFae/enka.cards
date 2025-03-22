@@ -34,7 +34,7 @@ router.get(
 				true,
 				result,
 				hashes.hoyo_type
-			).catch(() => null);
+			).catch((error) => { console.log(error); return null });
 			if (!img) return res.status(500).send('Error');
 			if (!(img instanceof Buffer)) return img;
 			res.setHeader('Content-Type', 'image/png');
@@ -52,7 +52,7 @@ router.get(
 				true,
 				result,
 				hashes.hoyo_type
-			).catch(() => null);
+			).catch((error) => { console.log(error); return null });
 			if (!img) return res.status(500).send('Error');
 			if (!(img instanceof Buffer)) return img;
 			return res.end(img, 'binary');
