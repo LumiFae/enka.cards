@@ -2,7 +2,6 @@ FROM node:20
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-noto-cjk \
-    # Puppeteer dependencies
     ca-certificates \
     fonts-liberation \
     libappindicator3-1 \
@@ -40,7 +39,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     lsb-release \
     wget \
     xdg-utils \
-    # Additional dependencies that might be required
     chromium \
     && rm -rf /var/lib/apt/lists/*
 
