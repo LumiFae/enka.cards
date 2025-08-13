@@ -103,11 +103,14 @@ export async function getGICardNumber(
 ) {
 	const GICharacters = await getGICharacters(locale);
 	function avIdToIndex(id: number) {
-		const index = apiData.avatarInfoList.findIndex(
-			(e) => e.avatarId === id,
-		);
-		const ret = index === -1 ? null : index;
-		return ret;
+		try {
+			const index = apiData.avatarInfoList.findIndex(
+				(e) => e.avatarId === id,
+			);
+			return index === -1 ? null : index;
+		} catch {
+			return null;
+		}
 	}
 	return getCardNumber(avIdToIndex, GICharacters, character);
 }
@@ -129,11 +132,14 @@ export async function getHSRCardNumber(
 ) {
 	const HSRCharacters = await getHSRCharacters(locale);
 	function avIdToIndex(id: number) {
-		const index = apiData.detailInfo.avatarDetailList.findIndex(
-			(e) => e.avatarId === id,
-		);
-		const ret = index === -1 ? null : index;
-		return ret;
+		try {
+			const index = apiData.detailInfo.avatarDetailList.findIndex(
+				(e) => e.avatarId === id,
+			);
+			return index === -1 ? null : index;
+		} catch {
+			return null;
+		}
 	}
 	return getCardNumber(avIdToIndex, HSRCharacters, character);
 }
@@ -167,10 +173,14 @@ export async function getZZZCardNumber(
 	const ZZZCharacters = await getZZZCharacters(locale);
 
 	function avIdToIndex(id: number) {
-		const index: number = apiData.PlayerInfo.ShowcaseDetail.AvatarList.findIndex(
-			e => e.Id === id
-		)
-		return index === -1 ? null : index;
+		try {
+			const index: number = apiData.PlayerInfo.ShowcaseDetail.AvatarList.findIndex(
+				e => e.Id === id
+			)
+			return index === -1 ? null : index;
+		} catch {
+			return null;
+		}
 	}
 	return getCardNumber(avIdToIndex, ZZZCharacters, character);
 }
