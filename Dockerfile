@@ -63,8 +63,12 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 FROM base AS release
 COPY --from=install /temp/prod/node_modules node_modules
-COPY --from=prerelease /usr/src/app/index.ts .
+COPY --from=prerelease /usr/src/app/src ./src
 COPY --from=prerelease /usr/src/app/package.json .
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 EXPOSE 3000
 CMD ["bun", "run", "src/index.ts"]
