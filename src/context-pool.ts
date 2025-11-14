@@ -12,6 +12,7 @@ export default class ContextPool {
 
         const browser = await getBrowser();
         const context = await browser.createBrowserContext();
+        await context.newPage();
         this.refill();
         return context;
     }
