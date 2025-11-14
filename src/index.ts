@@ -45,3 +45,5 @@ honkaiUid(app);
 zenlessUid(app);
 
 export type App = typeof app;
+
+console.log(`Started on ${process.env.PORT ?? 3000}`)
