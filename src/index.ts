@@ -1,41 +1,47 @@
-import express, { Request, Response } from 'express';
-import dotenv from 'dotenv';
-import uid from './routes/uid';
-import uidimage from './routes/uidimage';
-import user from './routes/user';
-import userimage from './routes/userimage';
-import { init } from './s3';
-import hsruidimage from './routes/hsruidimage';
-import hsruid from './routes/hsruid';
-import zzzuid from './routes/zzzuid';
-import zzzuidimage from './routes/zzzuidimage';
+import { Elysia, redirect, t } from "elysia";
+import { CacheOptions } from "./types/general";
+import html from "@elysiajs/html";
+import profile from "./routes/profile";
+import { default as genshinUid } from "./routes/genshin/uid";
+import { default as zenlessUid } from "./routes/zzz/uid";
+import { default as honkaiUid } from "./routes/hsr/uid";
 
-dotenv.config();
+const app = new Elysia({
+    systemRouter: false,
+})
+    .use(html())
+    .get("/", () => redirect("https://enka.network", 301))
+    .listen(+(process.env.PORT ?? 3000))
+    .guard({
+        as: "global",
+        query: t.Object({
+            substats: t.Optional(t.Boolean()),
+            subsBreakdown: t.Optional(t.Boolean()),
+            uid: t.Optional(t.Boolean()),
+            hideNames: t.Optional(t.Boolean()),
+            locale: t.Optional(t.String()),
+        }),
+    })
+    .derive(({ query }) => {
+        // sometimes these below values can be a string, so we have to convert
+        const toBool = (bool: string | boolean) => String(bool) === "true";
 
-const app = express();
+        const cacheOptions: CacheOptions = {
+            substats: toBool(query.substats ?? false),
+            subsBreakdown: toBool(query.subsBreakdown ?? false),
+            uid: toBool(query.uid ?? true),
+            hideNames: toBool(query.hideNames ?? false),
+        };
 
-// https://cards.enka.network/u/jxtq/488BWO/10000089/3018594
-// http://localhost:3000/u/jxtq/488BWO/10000089/3018594
+        return {
+            cacheOptions,
+            locale: query.locale ?? "en",
+        };
+    });
 
-app.use('/', hsruidimage);
-app.use('/', hsruid);
-app.use('/', uidimage);
-app.use('/', uid);
-app.use('/', userimage);
-app.use('/', user);
-app.use('/', zzzuid);
-app.use('/', zzzuidimage);
+profile(app);
+genshinUid(app);
+honkaiUid(app);
+zenlessUid(app);
 
-app.get('/', (_: Request, res: Response) => {
-	return res.redirect('https://enka.network');
-});
-
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-	init();
-	console.log(`Server is running on port ${port}`);
-});
-
-app.use((_: Request, res: Response) => {
-	res.redirect('https://enka.network');
-});
+export type App = typeof app;

@@ -1,27 +1,128 @@
-import { Browser, launch } from 'puppeteer';
+import puppeteer, { Browser } from "puppeteer";
+import { CacheOptions } from "./types/general";
 
 let browser: Browser | null = null;
 
-async function init() {
-	const puppeteerBrowser = await launch({
-		args: [
-			'--no-sandbox',
-			'--font-render-hinting=medium',
-			'--force-color-profile=srgb',
-			'--disable-web-security',
-			'--disable-setuid-sandbox',
-			'--disable-features=IsolateOrigins',
-			'--disable-site-isolation-trials',
-		],
-	});
+const getBrowser = async () =>
+    (browser ??= await puppeteer.launch({
+        args: [
+            "--no-sandbox",
+            "--font-render-hinting=medium",
+            "--force-color-profile=srgb",
+            "--disable-web-security",
+            "--disable-setuid-sandbox",
+            "--disable-features=IsolateOrigins",
+            "--disable-site-isolation-trials",
+        ],
+    }));
 
-	browser = puppeteerBrowser;
-	return puppeteerBrowser;
-}
+const generateGlobalToggles = (options: CacheOptions) => ({
+    dark: false,
+    saveImageToServer: false,
+    userContent: true,
+    adaptiveColor: false,
+    profileCategory: 0,
+    hoyo_type: 0,
+    ...options,
+});
 
-export async function getBrowser() {
-	if (!browser) {
-		return await init();
-	}
-	return browser as Browser;
-}
+export const getCard = async (
+    url: string,
+    locale: string,
+    cacheOptions: CacheOptions,
+    index?: number
+) => {
+    const browser = await getBrowser();
+    const context = await browser.createBrowserContext();
+    const page = await context.newPage();
+
+    console.log(cacheOptions)
+
+    await Promise.all([
+        page.setRequestInterception(true),
+        page.setUserAgent({
+            userAgent:
+                "Mozilla/5.0 (compatible; enka.cards/1.0; +https://cards.enka.network)",
+        }),
+        page.setViewport({ width: 1920, height: 1080 }),
+        context.setCookie(
+            {
+                name: "locale",
+                value: locale,
+                domain: "enka.network",
+                path: "/",
+                expires: -1,
+            },
+            {
+                name: "globalToggles",
+                value: btoa(
+                    JSON.stringify(generateGlobalToggles(cacheOptions))
+                ),
+                domain: "enka.network",
+                path: "/",
+                expires: -1,
+            }
+        ),
+    ]);
+
+    page.on("request", (event) => {
+        const url = new URL(event.url());
+
+        if (
+            url.pathname.startsWith("/img/") &&
+            !url.pathname.includes("UI_Gacha_AvtarImg") &&
+            !url.pathname.includes("overlay.jpg") &&
+            !url.pathname.includes("zzz_bg.jpg") &&
+            !url.pathname.includes("hsr_bg.jpg") &&
+            !url.pathname.includes("const-bg.png") &&
+            !url.pathname.includes("hsrdashed.svg")
+        )
+            event.abort();
+        else if (url.host === "api.enka.network") event.abort();
+        else if (
+            url.pathname.startsWith("/ui/hsr/SpriteOutput/AvatarRoundIcon/")
+        )
+            event.abort();
+        else if (
+            url.pathname.startsWith("/ui/zzz/IconInterKnotRole") ||
+            url.pathname.startsWith("/ui/zzz/Tower") ||
+            url.pathname.startsWith("/ui/zzz/Assault") ||
+            url.pathname.startsWith("/ui/zzz/IconRoleCircle")
+        )
+            event.abort();
+        else if (
+            url.pathname.startsWith("/api/") &&
+            !url.pathname.startsWith("/api/profile")
+        )
+            event.abort();
+        else if (url.pathname.includes("UI_AvatarIcon")) event.abort();
+        else if (url.host === "cdn.enka.network") event.abort();
+        else if (url.pathname.endsWith(".ico")) event.abort();
+        else if (url.pathname.startsWith("/video/")) event.abort();
+        else event.continue();
+    });
+
+    await page.goto(url);
+
+    await page.waitForFunction("document.fonts.ready");
+
+    if (index) {
+        await page.waitForSelector("content>div.CharacterList>div.avatar.live");
+        const selector = await page
+            .$$("content>div.CharacterList>div.avatar.live")
+            .then((selectors) => selectors[index]);
+
+        if (!selector) return undefined;
+
+        await selector.click();
+    }
+
+    await page.waitForSelector("div.Card>div.card-host");
+    await page.waitForFunction('!document.querySelector("div.Card .loader")');
+
+    const html = await page.waitForSelector("div.Card");
+
+    const img = await html?.screenshot({ type: "jpeg" });
+
+    return img;
+};
