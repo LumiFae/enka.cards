@@ -32,12 +32,13 @@ export const getCard = async (
     cacheOptions: CacheOptions,
     index?: number
 ) => {
+    console.time("browser")
     const browser = await getBrowser();
     const context = await browser.createBrowserContext();
     const page = await context.newPage();
+    console.timeEnd("browser")
 
-    console.log(cacheOptions)
-
+    console.time("setup")
     await Promise.all([
         page.setRequestInterception(true),
         page.setUserAgent({
@@ -64,6 +65,7 @@ export const getCard = async (
             }
         ),
     ]);
+    console.timeEnd("setup")
 
     page.on("request", (event) => {
         const url = new URL(event.url());
@@ -102,6 +104,7 @@ export const getCard = async (
         else event.continue();
     });
 
+    console.time("page")
     await page.goto(url);
 
     await page.waitForFunction("document.fonts.ready");
@@ -121,8 +124,11 @@ export const getCard = async (
     await page.waitForFunction('!document.querySelector("div.Card .loader")');
 
     const html = await page.waitForSelector("div.Card");
+    console.timeEnd("page")
 
+    console.time("screenshot")
     const img = await html?.screenshot({ type: "jpeg" });
+    console.timeEnd("screenshot")
 
     return img;
 };
