@@ -1,9 +1,10 @@
 import puppeteer, { Browser } from "puppeteer";
 import { CacheOptions } from "./types/general";
+import ContextPool from "./context-pool";
 
 let browser: Browser | null = null;
 
-const getBrowser = async () =>
+export const getBrowser = async () =>
     (browser ??= await puppeteer.launch({
         args: [
             "--no-sandbox",
@@ -32,13 +33,11 @@ export const getCard = async (
     cacheOptions: CacheOptions,
     index?: number
 ) => {
-    console.time("browser")
-    const browser = await getBrowser();
-    const context = await browser.createBrowserContext();
+    console.time("browser");
+    const context = await ContextPool.get();
     const page = await context.newPage();
-    console.timeEnd("browser")
+    console.timeEnd("browser");
 
-    console.time("setup")
     await Promise.all([
         page.setRequestInterception(true),
         page.setUserAgent({
@@ -65,7 +64,6 @@ export const getCard = async (
             }
         ),
     ]);
-    console.timeEnd("setup")
 
     page.on("request", (event) => {
         const url = new URL(event.url());
@@ -98,13 +96,16 @@ export const getCard = async (
         )
             event.abort();
         else if (url.pathname.includes("UI_AvatarIcon")) event.abort();
-        else if (url.host === "cdn.enka.network") event.abort();
+        else if (
+            url.host === "cdn.enka.network" &&
+            !url.pathname.startsWith("/avatars/images/")
+        )
+            event.abort();
         else if (url.pathname.endsWith(".ico")) event.abort();
         else if (url.pathname.startsWith("/video/")) event.abort();
         else event.continue();
     });
 
-    console.time("page")
     await page.goto(url);
 
     await page.waitForFunction("document.fonts.ready");
@@ -124,11 +125,11 @@ export const getCard = async (
     await page.waitForFunction('!document.querySelector("div.Card .loader")');
 
     const html = await page.waitForSelector("div.Card");
-    console.timeEnd("page")
 
-    console.time("screenshot")
     const img = await html?.screenshot({ type: "jpeg" });
-    console.timeEnd("screenshot")
+
+    void page.close();
+    void ContextPool.return(context);
 
     return img;
 };
