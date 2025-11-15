@@ -2,11 +2,13 @@ import { S3Client, S3File } from "bun";
 import { CacheOptions } from "./types/general";
 import { HoyoType_T } from "./types/api";
 
+const bucket = "enkacards";
+
 export const client = new S3Client({
     accessKeyId: process.env.ACCESS_KEY_ID!,
     secretAccessKey: process.env.SECRET_ACCESS_KEY!,
     endpoint: process.env.S3_ENDPOINT!,
-    bucket: "enkacards",
+    bucket,
 });
 
 const defaultCacheOptions: CacheOptions = {
@@ -57,9 +59,7 @@ export class CachedImage {
     constructor(public file: S3File) {}
 
     get url() {
-        return this.file.presign({
-            acl: "public-read",
-        });
+        return `https://${process.env.S3_ENDPOINT}/${bucket}/${this.file.name}`
     }
 
     public get = async () => await this.file.arrayBuffer().catch(() => null);
@@ -69,6 +69,7 @@ export class CachedImage {
     ) =>
         await this.file.write(value, {
             type: "image/jpeg",
+            acl: "public-read",
         });
 
     public exists = async () => await this.file.exists();
