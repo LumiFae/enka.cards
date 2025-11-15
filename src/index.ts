@@ -36,7 +36,9 @@ const app = new Elysia({
         return {
             cacheOptions,
             locale: query.lang ?? "en",
+            start: performance.now(),
         };
+    })
     .onBeforeHandle(({ redirect, route, headers, path: path_, params }) => {
         const pathSplit = path_.split("/");
         const path =
@@ -50,6 +52,39 @@ const app = new Elysia({
         )
             return redirect(`https://enka.network${path}`, 302);
     })
+    .onAfterResponse(async ({ route, path, set: { status }, start }) => {
+        const end = performance.now();
+        const durationMs = Math.round((end - start) * 100) / 100;
+
+        await fetch(process.env.GRAFANA_URL!, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                streams: [
+                    {
+                        stream: {
+                            job: "enka_cards",
+                            route: route,
+                        },
+                        values: [
+                            [
+                                (Date.now() * 1000000).toString(),
+                                JSON.stringify({
+                                    message: String(status).startsWith("2")
+                                        ? "Success"
+                                        : "Error",
+                                    path: path,
+                                    status: status,
+                                    duration_ms: durationMs,
+                                }),
+                            ],
+                        ],
+                    },
+                ],
+            }),
+        });
     });
 
 profile(app);
