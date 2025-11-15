@@ -6,7 +6,7 @@ import { BaseHoyoProfile } from "../types/api";
 export default (app: App) =>
     app.group("/u/:identifier/:identifier2/:characterId/:buildId", (app) =>
         app
-            .derive(async ({ params, cacheOptions, status }) => {
+            .derive(async ({ params, cacheOptions, status, locale }) => {
                 // elysia issue fixed in 1.5, but not released
                 const username = params.identifier;
                 const hash = params.identifier2;
@@ -33,6 +33,7 @@ export default (app: App) =>
                         params.characterId,
                         params.buildId,
                         data.live_data_hash,
+                        locale,
                         cacheOptions
                     ),
                 };

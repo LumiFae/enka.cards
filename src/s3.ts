@@ -32,6 +32,7 @@ export const generateFile = (
     characterId: string | number,
     buildId: string | number,
     dataHash: number,
+    locale: string,
     options: CacheOptions
 ) => {
     const base64 = btoa(stringify(options));
@@ -45,6 +46,7 @@ export const generateUidFile = (
     type: HoyoType_T,
     characterId: string | number,
     characterData: object,
+    locale: string,
     options: CacheOptions
 ) => {
     const base64 = btoa(stringify(options));
@@ -59,7 +61,7 @@ export class CachedImage {
     constructor(public file: S3File) {}
 
     get url() {
-        return `https://${process.env.S3_ENDPOINT}/${bucket}/${this.file.name}`
+        return `https://${process.env.S3_ENDPOINT}/${bucket}/${this.file.name}`;
     }
 
     public get = async () => await this.file.arrayBuffer().catch(() => null);
@@ -97,6 +99,7 @@ export class CachedImage {
         characterId: string | number,
         buildId: string | number,
         dataHash: number,
+        locale: string,
         options: CacheOptions = defaultCacheOptions
     ) =>
         new CachedImage(
@@ -106,6 +109,7 @@ export class CachedImage {
                 characterId,
                 buildId,
                 dataHash,
+                locale,
                 options
             )
         );
@@ -115,9 +119,17 @@ export class CachedImage {
         type: HoyoType_T,
         characterId: string | number,
         characterData: object,
+        locale: string,
         options: CacheOptions = defaultCacheOptions
     ) =>
         new CachedImage(
-            generateUidFile(uid, type, characterId, characterData, options)
+            generateUidFile(
+                uid,
+                type,
+                characterId,
+                characterData,
+                locale,
+                options
+            )
         );
 }

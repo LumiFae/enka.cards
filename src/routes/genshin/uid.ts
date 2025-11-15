@@ -6,7 +6,7 @@ import { GenshinUid } from "../../types/api";
 export default (app: App) =>
     app.group("/u/:identifier/:identifier2", (app) =>
         app
-            .derive(async ({ params, cacheOptions, status }) => {
+            .derive(async ({ params, cacheOptions, status, locale }) => {
                 // elysia 1.4 has an issue with params, got told will be fixed when 1.5 drops
                 const uid = params.identifier;
                 const characterId = params.identifier2;
@@ -35,6 +35,7 @@ export default (app: App) =>
                         0,
                         characterId,
                         data.avatarInfoList[characterIndex],
+                        locale,
                         cacheOptions
                     ),
                     characterIndex,
