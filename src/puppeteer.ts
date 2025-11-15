@@ -1,6 +1,8 @@
 import puppeteer, { Browser } from "puppeteer";
-import { CacheOptions } from "./types/general";
+import { CacheOptions, CachedResponse } from "./types/general";
 import ContextPool from "./context-pool";
+
+const responseCache = new Map<string, CachedResponse>();
 
 let browser: Browser | null = null;
 
@@ -33,103 +35,144 @@ export const getCard = async (
     cacheOptions: CacheOptions,
     index?: number
 ) => {
-    console.time("browser");
-    const context = await ContextPool.get();
-    const page = await context.newPage();
-    console.timeEnd("browser");
+    try {
+        console.time("getCard")
+        const context = await ContextPool.get();
+        const page = await context.newPage();
 
-    await Promise.all([
-        page.setRequestInterception(true),
-        page.setUserAgent({
-            userAgent:
-                "Mozilla/5.0 (compatible; enka.cards/1.0; +https://cards.enka.network)",
-        }),
-        page.setViewport({ width: 1920, height: 1080 }),
-        context.setCookie(
-            {
-                name: "locale",
-                value: locale,
-                domain: "enka.network",
-                path: "/",
-                expires: -1,
-            },
-            {
-                name: "globalToggles",
-                value: btoa(
-                    JSON.stringify(generateGlobalToggles(cacheOptions))
-                ),
-                domain: "enka.network",
-                path: "/",
-                expires: -1,
+        await Promise.all([
+            page.setRequestInterception(true),
+            page.setUserAgent({
+                userAgent:
+                    "Mozilla/5.0 (compatible; enka.cards/1.0; +https://cards.enka.network)",
+            }),
+            page.setViewport({ width: 1920, height: 1080 }),
+            context.setCookie(
+                {
+                    name: "locale",
+                    value: locale,
+                    domain: "enka.network",
+                    path: "/",
+                    expires: -1,
+                },
+                {
+                    name: "globalToggles",
+                    value: btoa(
+                        JSON.stringify(generateGlobalToggles(cacheOptions))
+                    ),
+                    domain: "enka.network",
+                    path: "/",
+                    expires: -1,
+                }
+            ),
+        ]);
+
+        page.on("request", (event) => {
+            const url = new URL(event.url());
+
+            const cached = responseCache.get(url.href);
+            if (cached && cached.expires > Date.now())
+                return event.respond({
+                    status: cached.status,
+                    headers: cached.headers,
+                    body: cached.body,
+                });
+
+            if (
+                url.pathname.startsWith("/img/") &&
+                !url.pathname.includes("UI_Gacha_AvtarImg") &&
+                !url.pathname.includes("overlay.jpg") &&
+                !url.pathname.includes("zzz_bg.jpg") &&
+                !url.pathname.includes("hsr_bg.jpg") &&
+                !url.pathname.includes("const-bg.png") &&
+                !url.pathname.includes("hsrdashed.svg")
+            )
+                event.abort();
+            else if (url.host === "api.enka.network") event.abort();
+            else if (
+                url.pathname.startsWith("/ui/hsr/SpriteOutput/AvatarRoundIcon/")
+            )
+                event.abort();
+            else if (
+                url.pathname.startsWith("/ui/zzz/IconInterKnotRole") ||
+                url.pathname.startsWith("/ui/zzz/Tower") ||
+                url.pathname.startsWith("/ui/zzz/Assault") ||
+                url.pathname.startsWith("/ui/zzz/IconRoleCircle")
+            )
+                event.abort();
+            else if (
+                url.pathname.startsWith("/api/") &&
+                !url.pathname.startsWith("/api/profile")
+            )
+                event.abort();
+            else if (url.pathname.includes("UI_AvatarIcon")) event.abort();
+            else if (
+                url.host === "cdn.enka.network" &&
+                !url.pathname.startsWith("/avatars/images/")
+            )
+                event.abort();
+            else if (url.pathname.endsWith(".ico")) event.abort();
+            else if (url.pathname.startsWith("/video/")) event.abort();
+            else event.continue();
+        });
+
+        page.on("response", async (response) => {
+            const headers = response.headers();
+            const cacheControl = headers["cache-control"];
+            if (!cacheControl) return;
+
+            const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
+            if (!maxAgeMatch || maxAgeMatch[1] === "0") return;
+
+            const maxAge = parseInt(maxAgeMatch[1], 10);
+
+            try {
+                const url = new URL(response.url());
+                const body = await response.buffer();
+                responseCache.set(url.href, {
+                    status: response.status(),
+                    headers: headers,
+                    body,
+                    expires: Date.now() + maxAge * 1000,
+                });
+            } catch {
+                // Can't be cached
             }
-        ),
-    ]);
+        });
 
-    page.on("request", (event) => {
-        const url = new URL(event.url());
+        await page.goto(url);
 
-        if (
-            url.pathname.startsWith("/img/") &&
-            !url.pathname.includes("UI_Gacha_AvtarImg") &&
-            !url.pathname.includes("overlay.jpg") &&
-            !url.pathname.includes("zzz_bg.jpg") &&
-            !url.pathname.includes("hsr_bg.jpg") &&
-            !url.pathname.includes("const-bg.png") &&
-            !url.pathname.includes("hsrdashed.svg")
-        )
-            event.abort();
-        else if (url.host === "api.enka.network") event.abort();
-        else if (
-            url.pathname.startsWith("/ui/hsr/SpriteOutput/AvatarRoundIcon/")
-        )
-            event.abort();
-        else if (
-            url.pathname.startsWith("/ui/zzz/IconInterKnotRole") ||
-            url.pathname.startsWith("/ui/zzz/Tower") ||
-            url.pathname.startsWith("/ui/zzz/Assault") ||
-            url.pathname.startsWith("/ui/zzz/IconRoleCircle")
-        )
-            event.abort();
-        else if (
-            url.pathname.startsWith("/api/") &&
-            !url.pathname.startsWith("/api/profile")
-        )
-            event.abort();
-        else if (url.pathname.includes("UI_AvatarIcon")) event.abort();
-        else if (
-            url.host === "cdn.enka.network" &&
-            !url.pathname.startsWith("/avatars/images/")
-        )
-            event.abort();
-        else if (url.pathname.endsWith(".ico")) event.abort();
-        else if (url.pathname.startsWith("/video/")) event.abort();
-        else event.continue();
-    });
+        await page.waitForFunction("document.fonts.ready");
 
-    await page.goto(url);
+        if (index) {
+            await page.waitForSelector(
+                "content>div.CharacterList>div.avatar.live"
+            );
+            const selector = await page
+                .$$("content>div.CharacterList>div.avatar.live")
+                .then((selectors) => selectors[index]);
 
-    await page.waitForFunction("document.fonts.ready");
+            if (!selector) return undefined;
 
-    if (index) {
-        await page.waitForSelector("content>div.CharacterList>div.avatar.live");
-        const selector = await page
-            .$$("content>div.CharacterList>div.avatar.live")
-            .then((selectors) => selectors[index]);
+            await selector.click();
+        }
 
-        if (!selector) return undefined;
+        await page.waitForSelector("div.Card>div.card-host");
+        await page.waitForFunction(
+            '!document.querySelector("div.Card .loader")'
+        );
 
-        await selector.click();
+        const html = await page.waitForSelector("div.Card");
+
+        const img = await html?.screenshot({ type: "jpeg" });
+
+        void page.close();
+        void ContextPool.return(context);
+
+        console.timeEnd("getCard");
+        return img;
+    } catch (err) {
+        console.error("Encountered an error in getCard:\n" + err);
+        return undefined;
     }
-
-    await page.waitForSelector("div.Card>div.card-host");
-    await page.waitForFunction('!document.querySelector("div.Card .loader")');
-
-    const html = await page.waitForSelector("div.Card");
-
-    const img = await html?.screenshot({ type: "jpeg" });
-
-    void page.close();
-    void ContextPool.return(context);
-
-    return img;
 };

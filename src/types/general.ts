@@ -19,3 +19,10 @@ export interface CacheOptions {
 
 // Example globalToggles
 // {"uid":true,"nickname":true,"dark":false,"saveImageToServer":false,"substats":false,"subsBreakdown":false,"userContent":false,"adaptiveColor":false,"profileCategory":0,"hideNames":false,"hoyo_type":0,"wedge":false,"autoOpenSidebar":true,"lastReadTs":1742381697707}
+
+export interface CachedResponse {
+    status: number;
+    headers: Record<string, string>;
+    body: Buffer;
+    expires: number;
+}
