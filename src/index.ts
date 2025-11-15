@@ -19,7 +19,7 @@ const app = new Elysia({
             subsBreakdown: t.Optional(t.Boolean()),
             uid: t.Optional(t.Boolean()),
             hideNames: t.Optional(t.Boolean()),
-            locale: t.Optional(t.String()),
+            lang: t.Optional(t.String()),
         }),
     })
     .derive(({ query }) => {
@@ -35,7 +35,7 @@ const app = new Elysia({
 
         return {
             cacheOptions,
-            locale: query.locale ?? "en",
+            locale: query.lang ?? "en",
         };
     });
 
