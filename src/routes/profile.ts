@@ -40,21 +40,7 @@ export default (app: App) =>
             })
             .get(
                 "/",
-                async ({
-                    image,
-                    locale,
-                    enkaUrl,
-                    cacheOptions,
-                    status,
-                    headers,
-                    redirect,
-                }) => {
-                    if (
-                        !headers["user-agent"] ||
-                        !headers["user-agent"].includes("Discordbot")
-                    )
-                        return redirect(enkaUrl, 302);
-
+                async ({ image, locale, enkaUrl, cacheOptions, status }) => {
                     const html = image.generateHtml(locale, enkaUrl);
 
                     if (await image.exists()) return html;

@@ -37,6 +37,19 @@ const app = new Elysia({
             cacheOptions,
             locale: query.lang ?? "en",
         };
+    .onBeforeHandle(({ redirect, route, headers, path: path_, params }) => {
+        const pathSplit = path_.split("/");
+        const path =
+            "buildId" in params
+                ? path_
+                : pathSplit.slice(0, pathSplit.length - 1).join("/");
+        if (
+            !route.endsWith("/image") &&
+            (!headers["user-agent"] ||
+                !headers["user-agent"].includes("Discordbot"))
+        )
+            return redirect(`https://enka.network${path}`, 302);
+    })
     });
 
 profile(app);
@@ -46,4 +59,4 @@ zenlessUid(app);
 
 export type App = typeof app;
 
-console.log(`Started on ${process.env.PORT ?? 3000}`)
+console.log(`Started on ${process.env.PORT ?? 3000}`);

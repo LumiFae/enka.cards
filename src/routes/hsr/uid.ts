@@ -54,15 +54,7 @@ export default (app: App) =>
                     cacheOptions,
                     status,
                     characterIndex,
-                    headers,
-                    redirect,
                 }) => {
-                    if (
-                        !headers["user-agent"] ||
-                        !headers["user-agent"].includes("Discordbot")
-                    )
-                        return redirect(enkaUrl, 302);
-
                     const html = image.generateHtml(locale, enkaUrl);
 
                     if (await image.exists()) return html;
