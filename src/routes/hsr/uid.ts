@@ -66,6 +66,8 @@ export default (app: App) =>
                         characterIndex
                     );
 
+                    if (img === null)
+                        return status(404, "Failed to find card.");
                     if (!img) return status(502);
 
                     await image.set(img);
@@ -103,6 +105,8 @@ export default (app: App) =>
                         characterIndex
                     );
 
+                    if (img === null)
+                        return status(404, "Failed to find card.");
                     if (!img) return status(502);
 
                     await image.set(img);

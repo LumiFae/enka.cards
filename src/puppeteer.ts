@@ -29,6 +29,14 @@ const generateGlobalToggles = (options: CacheOptions) => ({
     ...options,
 });
 
+/**
+ * Gets the card from Puppeteer.
+ * @param url The URL to get the card from.
+ * @param locale The locale to parse into Enka.
+ * @param cacheOptions The cache options.
+ * @param index The character index in the case of UID lookups
+ * @returns The card if found, null if 404, and undefined if anything else.
+ */
 export const getCard = async (
     url: string,
     locale: string,
@@ -143,7 +151,7 @@ export const getCard = async (
         await page.goto(url);
 
         // In the case of redirects, i.e. the card is private/doesn't actually exist
-        if (page.url() !== url) return undefined;
+        if (page.url() !== url) return null;
 
         await page.waitForFunction("document.fonts.ready");
 
@@ -155,7 +163,7 @@ export const getCard = async (
                 .$$("content>div.CharacterList>div.avatar.live")
                 .then((selectors) => selectors[index]);
 
-            if (!selector) return undefined;
+            if (!selector) return null;
 
             await selector.click();
         }

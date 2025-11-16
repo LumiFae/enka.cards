@@ -47,6 +47,8 @@ export default (app: App) =>
 
                     const img = await getCard(enkaUrl, locale, cacheOptions);
 
+                    if (img === null)
+                        return status(404, "Failed to find card.");
                     if (!img) return status(502);
 
                     await image.set(img);
@@ -73,7 +75,9 @@ export default (app: App) =>
                         );
 
                     const img = await getCard(enkaUrl, locale, cacheOptions);
-
+                    
+                    if (img === null)
+                        return status(404, "Failed to find card.");
                     if (!img) return status(502);
 
                     await image.set(img);
