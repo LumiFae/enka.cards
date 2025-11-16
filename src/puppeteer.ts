@@ -172,7 +172,7 @@ export const getCard = async (
         console.timeEnd("getCard");
         return img;
     } catch (err) {
-        console.error("Encountered an error in getCard:\n" + err);
+        console.error(`Encountered an error whilst fetching card for ${url}:\n${err}`);
         return undefined;
     }
 };
