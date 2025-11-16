@@ -151,7 +151,10 @@ export const getCard = async (
         await page.goto(url);
 
         // In the case of redirects, i.e. the card is private/doesn't actually exist
-        if (page.url() !== url) return null;
+        const removeTrailingSlash = (url: string) => url.replace(/\/+$/, "");
+
+        if (removeTrailingSlash(page.url()) !== removeTrailingSlash(url))
+            return null;
 
         await page.waitForFunction("document.fonts.ready");
 
