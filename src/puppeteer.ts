@@ -36,7 +36,7 @@ export const getCard = async (
     index?: number
 ) => {
     try {
-        console.time("getCard")
+        console.time("getCard");
         const context = await ContextPool.get();
         const page = await context.newPage();
 
@@ -142,6 +142,9 @@ export const getCard = async (
 
         await page.goto(url);
 
+        // In the case of redirects, i.e. the card is private/doesn't actually exist
+        if (page.url() !== url) return undefined;
+
         await page.waitForFunction("document.fonts.ready");
 
         if (index) {
@@ -172,7 +175,9 @@ export const getCard = async (
         console.timeEnd("getCard");
         return img;
     } catch (err) {
-        console.error(`Encountered an error whilst fetching card for ${url}:\n${err}`);
+        console.error(
+            `Encountered an error whilst fetching card for ${url}:\n${err}`
+        );
         return undefined;
     }
 };
