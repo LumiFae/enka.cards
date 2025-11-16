@@ -68,8 +68,15 @@ export default (app: App) =>
                     );
 
                     if (img === null)
-                        return status(404, "Failed to find card.");
-                    if (!img) return status(502);
+                        return status(
+                            404,
+                            image.generateMissingHtml(locale, enkaUrl)
+                        );
+                    if (!img)
+                        return status(
+                            502,
+                            image.generateFailHtml(locale, enkaUrl)
+                        );
 
                     await image.set(img);
 

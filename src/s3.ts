@@ -76,7 +76,12 @@ export class CachedImage {
 
     public exists = async () => await this.file.exists();
 
-    public generateHtml = (locale: string, enkaurl: string) => `<!DOCTYPE html>
+    private rawHtml = (
+        locale: string,
+        enkaurl: string,
+        others?: string,
+        description = ""
+    ) => `<!DOCTYPE html>
         <html lang="${locale}">
             <head>
                 <meta content="enka.cards" property="og:title" />
@@ -85,13 +90,36 @@ export class CachedImage {
                 <meta property="twitter:domain" content="enka.cards">
                 <meta property="twitter:url" content="${enkaurl}">
                 <meta name="twitter:title" content="enka.cards">
-                <meta name="twitter:description" content="">
-                <meta name="twitter:image" content="${
-                    this.url
-                }?${encodeURIComponent(crypto.randomUUID())}">
+                <meta name="twitter:description" content="${description}">
+                ${others}
                 <title>enka.cards</title>
             </head>
         </html>`;
+
+    public generateHtml = (locale: string, enkaurl: string) =>
+        this.rawHtml(
+            locale,
+            enkaurl,
+            `<meta name="twitter:image" content="${
+                this.url
+            }?${encodeURIComponent(crypto.randomUUID())}">`
+        );
+
+    public generateMissingHtml = (locale: string, enkaurl: string) =>
+        this.rawHtml(
+            locale,
+            enkaurl,
+            "",
+            "Failed to find card/character, make sure your profile is public"
+        );
+
+    public generateFailHtml = (locale: string, enkaurl: string) =>
+        this.rawHtml(
+            locale,
+            enkaurl,
+            "",
+            "Failed to get card, try again later"
+        );
 
     public static get = (
         username: string,
