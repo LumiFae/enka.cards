@@ -38,7 +38,7 @@ Screenshot:
 
 - If you are using a Genshin / HSR / ZZZ UID lookup link, you will need to add either the character id at the end of the url. Examples being like, https://enka.network/u/744008962/10000089
 - If you are wanting a specific language that enka.network accepts, append `?lang={language}` to the end of the URL. Example: https://cards.enka.network/u/jxtq/488BWO/10000089/3018594?lang=fr
-- Other accepted query parameters are `substats`, `subsBreakdown`, `uid` and `hideNames`
+- Other accepted query parameters are `substats`, `subsBreakdown`, `uid` and `hideNames`, these must either be `true` or `false` when set, not `1` or `0`.
 - If wanting just the image (which isn't checked for being Discord or not), append `/image` to the end of the URL, but if you want a seperate language that must go after the `/image` part. Example: https://cards.enka.network/u/jxtq/488BWO/10000089/3018594/image or with a language https://cards.enka.network/u/jxtq/488BWO/10000089/3018594/image?lang=fr
 
 ## Notes
