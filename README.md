@@ -31,18 +31,28 @@ Screenshot:
 ## How to use
 
 1. Copy the link you want to convert.
-2. Replace "enka.network" with "cards.enka.network".
-3. Paste the new link into your Discord embed.
+2. Replace `enka.network` with `cards.enka.network`.
+3. Paste the new link into your Discord embed. Example URL would be: https://cards.enka.network/u/jxtq/488BWO/10000089/3018594
 
-## Specifics
+### If you are on a UID based profile (i.e. /u/744008962)
 
-- If you are using a Genshin / HSR / ZZZ UID lookup link, you will need to add either the character id at the end of the url. Examples being like, https://enka.network/u/744008962/10000089
-- If you are wanting a specific language that enka.network accepts, append `?lang={language}` to the end of the URL. Example: https://cards.enka.network/u/jxtq/488BWO/10000089/3018594?lang=fr
-- Other accepted query parameters are `substats`, `subsBreakdown`, `uid` and `hideNames`, these must either be `true` or `false` when set, not `1` or `0`.
-- If wanting just the image (which isn't checked for being Discord or not), append `/image` to the end of the URL, but if you want a seperate language that must go after the `/image` part. Example: https://cards.enka.network/u/jxtq/488BWO/10000089/3018594/image or with a language https://cards.enka.network/u/jxtq/488BWO/10000089/3018594/image?lang=fr
+4. Append the character ID to the end of the URL, example URL would be: https://enka.network/u/744008962/10000089
+
+## Getting the image directly
+
+If you have a website or Discord bot that would wish to utilise this feature, there is a route that allows for getting the image without checking if the request is from Discord or not. It also accepts all the query parameters available (listed below).
+
+To get the image directly, just append `/image` onto the end of the pathname.
+
+## Available query parameters (Added to the URL via [query params](https://dev.to/surbhidighe/understanding-params-and-query-params-a-simple-guide-1fi1))
+
+- `lang={language}` - The language you wish to use, defaults to `en`. Example would be `lang=fr` for French.
+- `substats` - Whether the `Roll Quality` / `Substats` toggle is enabled, requires `true` or `false`. Defaults to `false`.
+- `subsBreakdown` - Whether the `Substat breakdown` toggle is enabled, requires `true` or `false`. Defaults to `false`.
+- `uid` - Whether the `Show UID` toggle is enabled, requires `true` or `false`. Defaults to `true`.
+- `hideNames` - Wther the `Show username` toggle is disabled, requires `true` or `false`. Defaults to `false` (The wording here is confusing, I am aware. Names are shown by default in this instance.)
 
 ## Notes
 
-- If the link is a 404, you will just get sent to enka.network.
 - If you go to the card link, you will get redirected to the card on enka, unless you can not which you will just be redirected to the first card enka picks for you
 - If you go to the image link, you will get the image, this is the only link that doesn't redirect if Discord isn't the one fetching the link for the embed.
