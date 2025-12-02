@@ -8,7 +8,7 @@
   "dependencies": {
     "@elysiajs/html": "^1.4.0",
     "elysia": "latest",
-    "puppeteer": "^24.30.0"
+    "puppeteer": "^24.31.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -16,7 +16,7 @@
     "eslint": "^9.39.1",
     "globals": "^16.5.0",
     "jiti": "^2.6.1",
-    "typescript-eslint": "^8.46.4"
+    "typescript-eslint": "^8.48.1"
   },
   "module": "src/index.ts"
 }
