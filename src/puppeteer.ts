@@ -186,9 +186,13 @@ export const getCard = async (
         console.timeEnd("getCard");
         return img;
     } catch (err) {
-        console.error(
-            `Encountered an error whilst fetching card for ${url}:\n${err}`
-        );
+        if (err instanceof Error) {
+            console.error(`Encountered an error whilst fetching card for ${url}:\nName: ${err.name}\nMessage: ${err.message}\nCause: ${err.cause}\nStack: ${err.stack}`)
+        } else {
+            console.error(
+                `Encountered an error whilst fetching card for ${url}:\n${err}`
+            );
+        }
         return undefined;
     }
 };
