@@ -1,23 +1,24 @@
-import puppeteer, { Browser } from "puppeteer";
+import puppeteer, { Browser, BrowserContext } from "puppeteer";
 import { CacheOptions, CachedResponse } from "./types/general";
 import ContextPool from "./context-pool";
+import { makeCardKey, dedupe } from "./deduplication";
 
 const responseCache = new Map<string, CachedResponse>();
 
 let browser: Browser | null = null;
 
 export const getBrowser = async () =>
-    (browser ??= await puppeteer.launch({
-        args: [
-            "--no-sandbox",
-            "--font-render-hinting=medium",
-            "--force-color-profile=srgb",
-            "--disable-web-security",
-            "--disable-setuid-sandbox",
-            "--disable-features=IsolateOrigins",
-            "--disable-site-isolation-trials",
-        ],
-    }));
+(browser ??= await puppeteer.launch({
+    args: [
+        "--no-sandbox",
+        "--font-render-hinting=medium",
+        "--force-color-profile=srgb",
+        "--disable-web-security",
+        "--disable-setuid-sandbox",
+        "--disable-features=IsolateOrigins",
+        "--disable-site-isolation-trials",
+    ],
+}));
 
 const generateGlobalToggles = (options: CacheOptions) => ({
     dark: false,
@@ -37,15 +38,16 @@ const generateGlobalToggles = (options: CacheOptions) => ({
  * @param index The character index in the case of UID lookups
  * @returns The card if found, null if 404, and undefined if anything else.
  */
-export const getCard = async (
+export const getNewCard = async (
     url: string,
     locale: string,
     cacheOptions: CacheOptions,
     index?: number
 ) => {
+    let context: BrowserContext | null = null;
     try {
         console.time("getCard");
-        const context = await ContextPool.get();
+        context = await ContextPool.get();
         const page = await context.newPage();
 
         await Promise.all([
@@ -181,7 +183,6 @@ export const getCard = async (
         const img = await html?.screenshot({ type: "jpeg" });
 
         void page.close();
-        void ContextPool.return(context);
 
         console.timeEnd("getCard");
         return img;
@@ -194,5 +195,25 @@ export const getCard = async (
             );
         }
         return undefined;
+    } finally {
+        if (context) ContextPool.return(context);
     }
 };
+
+/**
+ * Gets the card from Puppeteer. Reuses pending requests for the same card.
+ * @param url The URL to get the card from.
+ * @param locale The locale to parse into Enka.
+ * @param cacheOptions The cache options.
+ * @param index The character index in the case of UID lookups
+ * @returns The card if found, null if 404, and undefined if anything else.
+ */
+export function getCard(
+    url: string,
+    locale: string,
+    cacheOptions: CacheOptions,
+    index?: number
+) {
+    const key = makeCardKey(url, locale, cacheOptions, index);
+    return dedupe(key, () => getNewCard(url, locale, cacheOptions, index));
+}
