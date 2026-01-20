@@ -1,4 +1,4 @@
-import puppeteer, { Browser } from "puppeteer";
+import puppeteer, { Browser, BrowserContext } from "puppeteer";
 import { CacheOptions, CachedResponse } from "./types/general";
 import ContextPool from "./context-pool";
 import { makeCardKey, dedupe } from "./deduplication";
@@ -8,17 +8,17 @@ const responseCache = new Map<string, CachedResponse>();
 let browser: Browser | null = null;
 
 export const getBrowser = async () =>
-    (browser ??= await puppeteer.launch({
-        args: [
-            "--no-sandbox",
-            "--font-render-hinting=medium",
-            "--force-color-profile=srgb",
-            "--disable-web-security",
-            "--disable-setuid-sandbox",
-            "--disable-features=IsolateOrigins",
-            "--disable-site-isolation-trials",
-        ],
-    }));
+(browser ??= await puppeteer.launch({
+    args: [
+        "--no-sandbox",
+        "--font-render-hinting=medium",
+        "--force-color-profile=srgb",
+        "--disable-web-security",
+        "--disable-setuid-sandbox",
+        "--disable-features=IsolateOrigins",
+        "--disable-site-isolation-trials",
+    ],
+}));
 
 const generateGlobalToggles = (options: CacheOptions) => ({
     dark: false,
@@ -44,9 +44,10 @@ export const getNewCard = async (
     cacheOptions: CacheOptions,
     index?: number
 ) => {
+    let context: BrowserContext | null = null;
     try {
         console.time("getCard");
-        const context = await ContextPool.get();
+        context = await ContextPool.get();
         const page = await context.newPage();
 
         await Promise.all([
@@ -182,7 +183,6 @@ export const getNewCard = async (
         const img = await html?.screenshot({ type: "jpeg" });
 
         void page.close();
-        void ContextPool.return(context);
 
         console.timeEnd("getCard");
         return img;
@@ -195,6 +195,8 @@ export const getNewCard = async (
             );
         }
         return undefined;
+    } finally {
+        if (context) ContextPool.return(context);
     }
 };
 
