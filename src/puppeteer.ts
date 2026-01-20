@@ -1,6 +1,7 @@
 import puppeteer, { Browser } from "puppeteer";
 import { CacheOptions, CachedResponse } from "./types/general";
 import ContextPool from "./context-pool";
+import { makeCardKey, dedupe } from "./deduplication";
 
 const responseCache = new Map<string, CachedResponse>();
 
@@ -37,7 +38,7 @@ const generateGlobalToggles = (options: CacheOptions) => ({
  * @param index The character index in the case of UID lookups
  * @returns The card if found, null if 404, and undefined if anything else.
  */
-export const getCard = async (
+export const getNewCard = async (
     url: string,
     locale: string,
     cacheOptions: CacheOptions,
@@ -196,3 +197,21 @@ export const getCard = async (
         return undefined;
     }
 };
+
+/**
+ * Gets the card from Puppeteer. Reuses pending requests for the same card.
+ * @param url The URL to get the card from.
+ * @param locale The locale to parse into Enka.
+ * @param cacheOptions The cache options.
+ * @param index The character index in the case of UID lookups
+ * @returns The card if found, null if 404, and undefined if anything else.
+ */
+export function getCard(
+    url: string,
+    locale: string,
+    cacheOptions: CacheOptions,
+    index?: number
+) {
+    const key = makeCardKey(url, locale, cacheOptions, index);
+    return dedupe(key, () => getNewCard(url, locale, cacheOptions, index));
+}
