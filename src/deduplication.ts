@@ -10,7 +10,6 @@ const pendingRenders = new Map<string, Promise<Uint8Array | null | undefined>>()
  */
 export function dedupe(key: string, fn: () => Promise<Uint8Array | null | undefined>) {
     const existing = pendingRenders.get(key);
-    console.log("existing?", !!existing);
     if (existing) return existing;
 
     // Use Promise.resolve to catch synchronous errors.
