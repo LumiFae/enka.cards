@@ -21,6 +21,9 @@ export default (app: App) =>
 
                 const data = (await res.json()) as GenshinUid;
 
+                if (!data.avatarInfoList)
+                    return status(400, "Showcase is not public");
+
                 const characterIndex = data.avatarInfoList.findIndex(
                     (x) => x.avatarId === parseInt(characterId)
                 );
