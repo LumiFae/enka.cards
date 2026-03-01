@@ -47,7 +47,7 @@ export interface BaseHoyoProfile {
 
 // Only avatarId is needed here, so this is just a basic implementation.
 export interface GenshinUid {
-    avatarInfoList: {
+    avatarInfoList?: {
         avatarId: number;
     }[]
 }
